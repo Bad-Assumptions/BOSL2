@@ -30,7 +30,7 @@ module _vslot_section_2d(profile) {
   k8 = ( s7*0.5-s2 )*reSize;
   k9 = s5*0.5*reSize;
   k10 = s7*0.5*reSize;
-echo(k3=k3,k6=k6,k4=k4,k9=k9);
+//echo(k3=k3,k6=k6,k4=k4,k9=k9);
   pnts = [
       [k0,k5],[k3,k5],
       [k6,k7],[k6,k8],[k4,k8],[k9,k10], [k0,k10],
@@ -93,7 +93,6 @@ module extrusion_vslot(profile=20, height=10, center, anchor, spin=0, orient=UP)
 module vslot_tongue(profile=20, height=10, offset=0.2, center, anchor, spin=0, orient=UP) {
   anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
   size = scalar_vec3([((10.6/20*profile)-offset*2), height, 6/20*profile-offset]);
-        echo(size=size);
   module shape() {
     linear_extrude(height=height) {
       difference() {
