@@ -10,6 +10,7 @@
 // TEST holes on FRONT, BACK. LEFT and RIGHT
 // TODO add offset to hole at surface
 include <../BOSL2/std.scad>
+include <../BOSL2/attachments_extras.scad>
 
 // Function: monting_plate_dims(size, [holes])
 // Synopsis: returns [size, anchors]
@@ -34,77 +35,41 @@ include <../BOSL2/std.scad>
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
 // Example: 
-function mounting_plate_dims(size=[100, 100, 5], holes = []) = [size, [for(i = [0:len(holes)-1]) named_anchor(str("hole_",i+1), concat(holes[i][0], 0), holes[i][1])]];
+// mounting_plate(size=[100,100,5], holes=holes) show_anchors();
 
-module mounting_plate(size=[100, 100, 5], holes = [], anchor, spin=0, orient=UP) {
-  DIM_ANCHOR=1;
-  
+
+function mounting_plate_geom(size=[100,100,5], holes=[]) =
+  let (
+    size = size,
+    num_holes = len(holes)-1 < 0 ? 0 : len(holes) - 1,
+    anchors = num_holes > 0 ? 
+      [for(i = [0:num_holes]) named_anchor(str("hole_",i+1), concat(holes[i][0], holes[i][2][1]/2*holes[i][1][2]), holes[i][1])] 
+    : 
+      []
+  )
+  attachable_geom(size=size, anchors=anchors);
+
+//*function mounting_plate_dims(size=[100, 100, 5], holes = []) = [size, [for(i = [0:len(holes)-1]) named_anchor(str("hole_",i+1), concat(holes[i][0], 0), holes[i][1])]];
+
+module mounting_plate(size=_attach_geom_size(mounting_plate_geom()), holes = [], anchor, spin=0, orient=UP) {
+  DIM_ANCHOR=8;
+
   module shape(size, holes) {
+    epsilon=0.02;
     difference() {
       cuboid(size);
-      #for (h = holes) {
-        p = [h[0].x, h[0].y, size.z/2*h[1].z];
-        translate(p) cyl(d=h[2][0], h=h[2][1], anchor=h[1], orient=TOP);
+      for (h = holes) {
+        p = [h[0].x, h[0].y, (size.z+epsilon)/2*h[1].z];
+        translate(p) cyl(d=h[2][0], h=h[2][1]+epsilon, anchor=h[1], orient=TOP);
       }
     }
   }
   
-  anchors=mounting_plate_dims(size, holes)[DIM_ANCHOR];
-  echo(holes=holes, anchors=anchors);
+  anchors=mounting_plate_geom(size, holes)[DIM_ANCHOR];
+//  echo(holes=holes, anchors=anchors);
   
   attachable(anchor,spin,orient, size=size, anchors=anchors) {
     shape(size=size, holes=holes);
     children();
   }
 }
-
-//TESTS
-holes=[
-[[-45, -45], TOP, [5,2]],
-[[-45, -45], TOP, [3,6]],
-[[-45, 45], BOTTOM, [5,2]],
-];
-
-mounting_plate(size=[100,100,5], holes=holes) show_anchors();
-//module basic_mounting_plate(width=10, slot_length=90,slot_d=3, text, center, anchor, spin=0, orient=UP) {
-//    slot_total_length = slot_length + slot_d;
-//    txt = is_def(text) ? text : "";
-//
-//    anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
-//    size = scalar_vec3([width,frame_width,thick_plate_t]);
-//	anchors = [
-//		named_anchor("hole_back_top", [0,vslot_distance/2,thick_plate_t/2], TOP, 0),
-//		named_anchor("hole_front_top", [0,-vslot_distance/2,thick_plate_t/2], TOP, 0),
-//		named_anchor("hole_back_bottom", [0,vslot_distance/2,-thick_plate_t/2], BOTTOM, 0),
-//		named_anchor("hole_front_bottom", [0,-vslot_distance/2,-thick_plate_t/2], BOTTOM, 0),
-//		named_anchor("slot_front_top", [0,slot_length/2,thick_plate_t/2], TOP, 0),
-//        
-//	];
-//        
-//    module shape() {
-//        difference() {
-//            union() {
-//              // plate
-//              linear_extrude(thick_plate_t, center=true) rect([width, frame_width], rounding = default_fillet);
-//              // vslot tongue
-//              yflip_copy() back(vslot_distance/2) down(thick_plate_t/2) vslot_tongue(offset=0.4, anchor=BOTTOM, orient=BOTTOM, spin=90);
-//            }
-//          
-//            yflip_copy() back(vslot_distance/2) {
-//              // vslot tap holes
-//              cyl(d = M4_tap_hole_d, h = thick_plate_t+40 + 2*epsilon, anchor=CENTER);
-//              // vslot counterbore holes
-//              up(thick_plate_t/2+epsilon) cyl(d = M4_head_d, h = M4_head_d + 2*epsilon, anchor=TOP);
-//            }
-//            // power supply through-slot
-//            linear_extrude(thick_plate_t+2*epsilon, center=true) rect([M3_through_hole_d, slot_total_length], rounding = M3_through_hole_d/2);
-//            // part number
-//            right(width*.5) down(thick_plate_t/2) rotate([0,180,-90]) linear_extrude(1, center=true) text(text=txt, size=M3_through_hole_d, halign="center", valign="top");        }
-//        
-//    }
-//    
-//    attachable(anchor,spin,orient, size=size, anchors=anchors) {
-//        shape();
-//        children();
-//    }
-//}

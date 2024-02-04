@@ -2,7 +2,9 @@
 // (C) Brian Alano, 2023 
 // Released under the BSD 2-Clause Licensea
 
-include <std.scad>
+include <../BOSL2/std.scad>
+include <../BOSL2/attachments_extras.scad>
+
 
 // Module: _vslot_section_2d
 // Arguments:
@@ -38,6 +40,13 @@ module _vslot_section_2d(profile) {
   polygon(points=pnts);
 }
 
+function extrusion_vslot_geom(profile=20, height=10) =
+  let (
+    size = scalar_vec3([profile,profile,height])
+    //anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1])
+  )
+  attachable_geom(size=size);
+
 // Module: extrusion_vslot
 // Arguments:
 // profile = profile side length in mm. Default 20
@@ -46,9 +55,8 @@ module _vslot_section_2d(profile) {
 // extrusion_vslot(profile=20, height=10, anchor=CENTER) attach(RIGHT) anchor_arrow();
 // Requires: <BOSL2/std.scad>
 module extrusion_vslot(profile=20, height=10, center, anchor, spin=0, orient=UP) {
-    anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
-    size = scalar_vec3([profile,profile,height]);
-        
+    geom = extrusion_vslot_geom(profile=profile, height=height);
+    echo(geom=geom);
     module shape() {
         linear_extrude(height=height) {
             difference() {
@@ -59,7 +67,7 @@ module extrusion_vslot(profile=20, height=10, center, anchor, spin=0, orient=UP)
         }
     }
     
-    attachable(anchor,spin,orient, size=size) {
+    attachable(anchor,spin,orient, geom=geom) {
         down(height/2) shape();
         children();
     }
@@ -114,7 +122,10 @@ module vslot_tongue(profile=20, height=10, offset=0.2, center, anchor, spin=0, o
   }
 }
 
+//TESTS
 //vslot_tongue(profile=20, offset=0.2, anchor=BOTTOM+LEFT);
 //left(20) vslot_tongue(profile=30, offset=0);
 //_vslot_section_2d(profile=40);
 //vslot_tongue(offset=1, anchor=BOTTOM) show_anchors();
+*extrusion_vslot();
+*extrusion_vslot(height=50) show_anchors();
